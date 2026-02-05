@@ -1,0 +1,12 @@
+
+{
+  "costumer_id": 123,
+  "order_items": [
+    {
+      "product_code": "prod-001",
+      "quantity": 2,
+      "unit_price": 100
+    }
+  ]
+}
+

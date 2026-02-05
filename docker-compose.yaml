@@ -1,0 +1,51 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: pf-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: minhasenha
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-pminhasenha"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  payment:
+    build: ./payment
+    environment:
+      DATA_SOURCE_URL: "root:minhasenha@tcp(mysql:3306)/payment"
+    ports:
+      - "3001:3001"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  shipping:
+    build: ./shipping
+    environment:
+      DATA_SOURCE_URL: "root:minhasenha@tcp(mysql:3306)/shipping"
+    ports:
+      - "3002:3002"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  order:
+    build: ./order
+    environment:
+      DATA_SOURCE_URL: "root:minhasenha@tcp(mysql:3306)/order"
+      PAYMENT_SERVICE_URL: "payment:3001"
+      SHIPPING_SERVICE_URL: "shipping:3002"
+    ports:
+      - "3000:3000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      payment:
+        condition: service_started
+      shipping:
+        condition: service_started
